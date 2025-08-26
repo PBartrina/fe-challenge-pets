@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Alpha",
+    "kind": "dog",
+    "weight": 10,
+    "height": 30,
+    "length": 50,
+    "photo_url": "https://example.test/dog.jpg",
+    "description": "A good doggo"
+  },
+  {
+    "id": 2,
+    "name": "Beta",
+    "kind": "cat",
+    "weight": 5,
+    "height": 20,
+    "length": 40,
+    "photo_url": "https://example.test/cat.jpg",
+    "description": "A good catto",
+    "number_of_lives": 7
+  }
+]

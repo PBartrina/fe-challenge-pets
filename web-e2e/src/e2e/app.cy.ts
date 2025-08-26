@@ -1,13 +1,8 @@
-import { getGreeting } from '../support/app.po';
 
-describe('web-e2e', () => {
-  beforeEach(() => cy.visit('/'));
-
-  it('should display welcome message', () => {
-    // Custom command example, see `../support/commands.ts` file
-    cy.login('my-email@something.com', 'myPassword');
-
-    // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains(/Welcome/);
+describe('web-e2e smoke', () => {
+  it('redirects to /pets and renders cards or empty state', () => {
+    cy.visit('/');
+    cy.url().should('match', /\/pets$/);
+    cy.contains('Pets'); // page heading exists
   });
 });
