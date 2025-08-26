@@ -1,0 +1,115 @@
+import { ChangeDetectionStrategy, Component, input, computed, signal } from '@angular/core';
+import type { Pet } from 'data-access-pets';
+
+const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'>
+  <rect width='100%' height='100%' fill='%23f2f2f2'/>
+  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='14' font-family='Arial, sans-serif'>
+    Image unavailable
+  </text>
+</svg>`;
+
+@Component({
+    selector: 'ui-pet-card',
+    standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    template: `
+        <article
+                class="pet-card"
+                role="article"
+                [attr.aria-labelledby]="'pet-' + pet().id + '-name'">
+            <header>
+                <h3 id="pet-{{ pet().id }}-name">{{ pet().name }}</h3>
+        <p class="pet-meta">
+          <span class="kind">{{ pet().kind }}</span>
+          @if (pet().number_of_lives !== undefined) {
+            <span class="lives"> · lives: {{ pet().number_of_lives }}</span>
+          }
+        </p>
+      </header>
+
+      <figure class="media" [attr.aria-label]="' Photo of {{ pet().name }}'">
+        <img
+          [src]="imgSrc()"
+          (error)="onImgError()"
+          alt="{{ pet().name }} the {{ pet().kind }}"
+          loading="lazy"
+        />
+      </figure>
+
+      <dl class="metrics">
+        <div>
+          <dt>Weight</dt>
+          <dd>{{ pet().weight }} grams</dd>
+        </div>
+        <div>
+          <dt>Height</dt>
+          <dd>{{ pet().height }} cm.</dd>
+        </div>
+        <div>
+          <dt>Length</dt>
+          <dd>{{ pet().length }} cm.</dd>
+        </div>
+      </dl>
+    </article>
+  `,
+  styles: [`
+    .pet-card {
+      border: 1px solid #e3e3e3;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      overflow: hidden; /* keep children within card */
+    }
+
+    .pet-meta { color: #555; margin: 0 0 8px 0; }
+    .kind { font-weight: 600; text-transform: capitalize; }
+    .lives { color: #666; }
+    .description { margin: 8px 0; color: #333; }
+
+    .media {
+      margin: 0 0 8px 0;
+      border-radius: 6px;
+      overflow: hidden;           /* clip image to card radius */
+      aspect-ratio: 16 / 9;       /* keep consistent thumb height */
+      background: #f2f2f2;
+      display: block;
+    }
+    .media img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;          /* keep image within boundaries */
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 8px 0 0 0;
+    }
+    .metrics dt {
+      font-weight: 600;
+      color: #444;
+    }
+    .metrics dd {
+      margin: 0;
+      color: #222;
+    }
+  `],
+})
+export class PetCardComponent {
+  pet = input.required<Pet>();
+
+  private readonly hadError = signal(false);
+
+  readonly imgSrc = computed(() => {
+    const url = this.pet().photo_url;
+    return !url || this.hadError() ? PLACEHOLDER_SVG : url;
+  });
+
+  onImgError(): void {
+    this.hadError.set(true);
+  }
+}
+

@@ -1,0 +1,36 @@
+{
+  "name": "data-access-pets",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "data-access-pets/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:data-access scope:pets"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "data-access-pets/ng-package.json",
+        "tsConfig": "data-access-pets/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "data-access-pets/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "data-access-pets/jest.config.ts",
+        "tsConfig": "data-access-pets/tsconfig.spec.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
