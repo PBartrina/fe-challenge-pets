@@ -34,6 +34,10 @@
 
     <span class="spacer" aria-hidden="true"></span>
 
+    <button type="button" class="pet-of-day-btn" (click)="onPetOfTheDay()">
+      Pet of the day
+    </button>
+
     <label>
       Page size
       <select #limitRef [value]="limit()" (change)="onChangeLimit(limitRef.value)">
@@ -58,7 +62,15 @@
   } @else {
     <div class="grid">
       @for (p of list; track p.id) {
-        <ui-pet-card [pet]="p" />
+        <a
+          [routerLink]="['/pets', p.id]"
+          [queryParams]="queryParams()"
+          queryParamsHandling="merge"
+          [attr.aria-label]="'Open details for {{ p.name }}'"
+          class="card-link"
+        >
+          <ui-pet-card [pet]="p" />
+        </a>
       }
     </div>
   }

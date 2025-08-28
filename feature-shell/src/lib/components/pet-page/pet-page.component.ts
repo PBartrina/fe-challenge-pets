@@ -1,8 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { Pet, PetsService } from 'data-access-pets';
 import { PetCardComponent } from 'ui';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { combineLatest, map, shareReplay, switchMap } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 type SortKey = 'weight' | 'length' | 'height' | 'name' | 'kind';
 type SortOrder = 'asc' | 'desc';
@@ -11,12 +14,14 @@ type SortOrder = 'asc' | 'desc';
   selector: 'feature-pet-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './pet-page.component.html',
-  styleUrl: './pet-page.component.scss',
-  imports: [PetCardComponent]
+  templateUrl: 'pet-page.component.html',
+  styleUrl: 'pet-page.component.scss',
+  imports: [PetCardComponent, RouterLink]
 })
 export class PetsPageComponent {
+  private readonly router = inject(Router);
   private readonly api = inject(PetsService);
+  private readonly route = inject(ActivatedRoute);
 
   // Sorting state
   readonly sortBy = signal<SortKey>('name');
@@ -28,6 +33,49 @@ export class PetsPageComponent {
   // Pagination state
   readonly page = signal(1);       // 1-based for JSON Server
   readonly limit = signal(12);     // items per page
+
+  // On init: hydrate state from query params (if present)
+  constructor() {
+    const qp = this.route.snapshot.queryParamMap;
+    const sort = qp.get('sort') as SortKey | null;
+    const order = qp.get('order') as SortOrder | null;
+    const kind = (qp.get('kind') as 'dog' | 'cat' | null) ?? '';
+    const page = Number(qp.get('page'));
+    const limit = Number(qp.get('limit'));
+    if (sort) this.sortBy.set(sort);
+    if (order) this.sortOrder.set(order);
+    if (kind) this.kindFilter.set(kind);
+    if (!Number.isNaN(page) && page > 0) this.page.set(page);
+    if (!Number.isNaN(limit) && limit > 0) this.limit.set(limit);
+  }
+
+  // Persist state to URL query params (without growing history)
+  readonly queryParams = computed(() => {
+    const sort = this.sortBy();
+    const order = this.sortOrder();
+    const page = this.page();
+    const limit = this.limit();
+    const kind = this.kindFilter();
+
+    // Only include 'order' when not filtering by kind
+    return {
+      sort,
+      order: sort === 'kind' ? undefined : order,
+      page,
+      limit,
+      kind: sort === 'kind' && kind ? kind : undefined,
+    };
+  });
+
+  private readonly _syncUrl = effect(() => {
+    const params = this.queryParams();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  });
 
   // Build a stream that re-queries the API on changes
   private readonly pets$ = combineLatest([
@@ -101,5 +149,47 @@ export class PetsPageComponent {
 
   onNextPage() {
     if (this.canNext()) this.page.update(p => p + 1);
+  }
+
+  onPetOfTheDay(): void {
+    // Fetch ALL pets ignoring current filters/sorting/pagination
+    this.api.getPets({}).pipe(take(1)).subscribe((all) => {
+      const ids = (all ?? [])
+        .map((p) => p?.id)
+        .filter((x): x is number => Number.isFinite(x))
+        .sort((a, b) => a - b);
+
+      if (ids.length === 0) return;
+
+      // Deterministic UTC date key (YYYY-MM-DD)
+      const todayUTC = new Date();
+      const yyyy = todayUTC.getUTCFullYear();
+      const mm = String(todayUTC.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(todayUTC.getUTCDate()).padStart(2, '0');
+      const dateKey = `${yyyy}-${mm}-${dd}`;
+
+      // Hash dateKey to a non-negative integer and map to index
+      const idx = this.hashString(dateKey) % ids.length;
+      const targetId = ids[idx] ?? ids[0];
+
+      const params = typeof this.queryParams === 'function' ? this.queryParams() : undefined;
+
+      // Navigate directly to the selected ID. The detail page fetches by ID,
+      // so it works even if the current list has filters (e.g., showing only cats)
+      this.router.navigate(['/pets', targetId], {
+        queryParams: params,
+        queryParamsHandling: 'merge',
+      });
+    });
+  }
+
+  private hashString(input: string): number {
+    let h = 0x811c9dc5; // FNV-1a 32-bit offset basis
+    for (let i = 0; i < input.length; i++) {
+      h ^= input.charCodeAt(i);
+      h = Math.imul(h, 0x01000193); // FNV prime
+      h >>>= 0; // keep as unsigned 32-bit
+    }
+    return h;
   }
 }

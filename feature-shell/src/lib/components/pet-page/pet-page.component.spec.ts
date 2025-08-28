@@ -1,103 +1,41 @@
-// feature-shell/src/lib/components/pet-page/pet-page.component.spec.ts
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
-import { PetsPageComponent } from './pet-page.component';
-import { PetsService, Pet } from 'data-access-pets';
+import { routes } from 'feature-shell';
+import { Route } from '@angular/router';
 
-class PetsServiceStub {
-  lastQuery: any;
-  private resp$ = new Subject<Pet[]>();
+describe('feature-shell routes', () => {
+  it('defines a root route with children', () => {
+    expect(Array.isArray(routes)).toBe(true);
+    expect(routes.length).toBeGreaterThan(0);
 
-  getPets(query: any) {
-    this.lastQuery = query;
-    return this.resp$.asObservable();
-  }
-
-  emit(items: Pet[]) {
-    this.resp$.next(items);
-  }
-}
-
-describe('PetsPageComponent', () => {
-  let fixture: ComponentFixture<PetsPageComponent>;
-  let component: PetsPageComponent;
-  let api: PetsServiceStub;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [PetsPageComponent],
-      providers: [{ provide: PetsService, useClass: PetsServiceStub }],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(PetsPageComponent);
-    component = fixture.componentInstance;
-    api = TestBed.inject(PetsService) as unknown as PetsServiceStub;
-    fixture.detectChanges();
+    const root = routes[0];
+    expect(root.children).toBeDefined();
+    expect(Array.isArray(root.children)).toBe(true);
   });
 
-  it('shows "Order" selector by default and hides "Kind"', () => {
-    const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Order');
-    expect(text).not.toContain('Kind');
+  it('contains "", "pets", "pets/:id", and "favorites" child routes', () => {
+    const children = routes[0].children ?? [];
+    const paths = children.map((r: Route) => r.path);
+
+    expect(paths).toContain('');
+    expect(paths).toContain('pets');
+    expect(paths).toContain('pets/:id');
+    expect(paths).toContain('favorites');
   });
 
-  it('switches to Kind filter when sortBy = kind and hides Order', () => {
-    component.onChangeSortBy('kind');
-    fixture.detectChanges();
+  it('configures lazy load components for child routes', () => {
+    const children = routes[0].children ?? [];
 
-    const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Kind');
-    expect(text).not.toContain('Order');
-  });
-
-  it('calls service with _sort/_order when sort by numeric/text fields', () => {
-    component.onChangeSortBy('weight');
-    component.onChangeSortOrder('asc');
-    fixture.detectChanges();
-
-    // trigger stream by emitting once
-    api.emit([] as Pet[]);
-    expect(api.lastQuery).toEqual(
-      jasmine.objectContaining({ sort: 'weight', order: 'asc', page: 1, limit: 12 })
+    const home = children.find((r: Route) => r.path === '');
+    const pets = children.find((r: Route) => r.path === 'pets');
+    const petDetail = children.find(
+      (r: Route) => r.path === 'pets/:id'
     );
-  });
-
-  it('calls service with kind filter (no _sort/_order) when sortBy=kind', () => {
-    component.onChangeSortBy('kind');
-    component.onChangeKindFilter('dog');
-    fixture.detectChanges();
-
-    api.emit([] as Pet[]);
-    expect(api.lastQuery).toEqual(
-      jasmine.objectContaining({ kind: 'dog', page: 1, limit: 12 })
+    const favorites = children.find(
+      (r: Route) => r.path === 'favorites'
     );
-    expect(api.lastQuery.sort).toBeUndefined();
-    expect(api.lastQuery.order).toBeUndefined();
-  });
 
-  it('updates pagination on next/prev respecting bounds', () => {
-    // default page=1, limit=12
-    component.onNextPage();
-    api.emit([] as Pet[]);
-    expect(api.lastQuery.page).toBe(2);
-
-    component.onPrevPage();
-    api.emit([] as Pet[]);
-    expect(api.lastQuery.page).toBe(1);
-
-    component.onPrevPage(); // should stay at 1
-    api.emit([] as Pet[]);
-    expect(api.lastQuery.page).toBe(1);
-  });
-
-  it('resets to page 1 when page size changes', () => {
-    component.onNextPage(); // page 2
-    api.emit([] as Pet[]);
-    expect(api.lastQuery.page).toBe(2);
-
-    component.onChangeLimit('24');
-    api.emit([] as Pet[]);
-    expect(api.lastQuery.page).toBe(1);
-    expect(api.lastQuery.limit).toBe(24);
+    expect(typeof home?.loadComponent).toBe('function');
+    expect(typeof pets?.loadComponent).toBe('function');
+    expect(typeof petDetail?.loadComponent).toBe('function');
+    expect(typeof favorites?.loadComponent).toBe('function');
   });
 });

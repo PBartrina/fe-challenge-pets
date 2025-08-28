@@ -1,3 +1,8 @@
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
 .tools {
   display: flex;
   gap: 12px;
@@ -17,10 +22,48 @@
     border: 1px solid #ccc;
     background: #fff;
   }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .pet-of-day-btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 120ms ease, box-shadow 120ms ease;
+
+    &:hover {
+      background: #f7f7f7;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04) inset;
+    }
+  }
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
+}
+
+/* Anchor: remove visual overrides; keep only pointer on hover */
+.card-link:hover {
+  cursor: pointer;
+}
+
+/* Emphasize the card on hover: slight scale + stronger outline */
+.card-link ui-pet-card {
+  display: block; /* ensure full clickable area */
+  transition: transform 140ms ease, outline-color 140ms ease, box-shadow 140ms ease;
+  outline: 1px solid transparent;
+  border-radius: 8px; /* match card radius visually */
+}
+
+.card-link:hover ui-pet-card {
+  transform: scale(1.02);
+  outline-color: #888; /* stronger outline on hover */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }

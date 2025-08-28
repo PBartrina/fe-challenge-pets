@@ -1,0 +1,33 @@
+<section *ngIf="pet() as p">
+  <nav>
+    <a [routerLink]="['/pets']" [queryParams]="backQuery()">← Back to list</a>
+  </nav>
+
+  <header class="header">
+    <h2>{{ p.name }}</h2>
+    <p class="meta">
+      <span class="kind">{{ p.kind }}</span>
+      @if (p.number_of_lives !== undefined) {
+        <span class="lives"> · lives: {{ p.number_of_lives }}</span>
+      }
+    </p>
+  </header>
+
+  <figure class="media">
+    <img
+      [src]="p.photo_url"
+      alt="{{ p.name }} the {{ p.kind }}"
+      loading="eager"
+    />
+  </figure>
+
+  <article class="details">
+    <p class="description">{{ p.description }}</p>
+
+    <dl class="metrics">
+      <div><dt>Weight</dt><dd>{{ p.weight }}</dd></div>
+      <div><dt>Height</dt><dd>{{ p.height }}</dd></div>
+      <div><dt>Length</dt><dd>{{ p.length }}</dd></div>
+    </dl>
+  </article>
+</section>

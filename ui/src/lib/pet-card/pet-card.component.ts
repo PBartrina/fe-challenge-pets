@@ -28,7 +28,7 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
         </p>
       </header>
 
-      <figure class="media" [attr.aria-label]="' Photo of {{ pet().name }}'">
+      <figure class="media" [attr.aria-labelledby]="'Photo of {{ pet().name }}'">
         <img
           [src]="imgSrc()"
           (error)="onImgError()"
@@ -37,29 +37,47 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
         />
       </figure>
 
+      @if (pet().description) {
+        <p class="description">{{ pet().description }}</p>
+      }
+
       <dl class="metrics">
         <div>
           <dt>Weight</dt>
-          <dd>{{ pet().weight }} grams</dd>
+          <dd>{{ pet().weight }}</dd>
         </div>
         <div>
           <dt>Height</dt>
-          <dd>{{ pet().height }} cm.</dd>
+          <dd>{{ pet().height }}</dd>
         </div>
         <div>
           <dt>Length</dt>
-          <dd>{{ pet().length }} cm.</dd>
+          <dd>{{ pet().length }}</dd>
         </div>
       </dl>
     </article>
   `,
   styles: [`
+    :host {
+      display: block;
+      border-radius: 8px;
+      outline: 1px solid transparent;
+      transition: transform 140ms ease, outline-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    :host(:hover) {
+      transform: scale(1.02);
+      outline-color: #888;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+    }
+
     .pet-card {
       border: 1px solid #e3e3e3;
       border-radius: 8px;
       padding: 12px;
       background: #fff;
-      overflow: hidden; /* keep children within card */
+      overflow: hidden;
     }
 
     .pet-meta { color: #555; margin: 0 0 8px 0; }
@@ -70,8 +88,8 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
     .media {
       margin: 0 0 8px 0;
       border-radius: 6px;
-      overflow: hidden;           /* clip image to card radius */
-      aspect-ratio: 16 / 9;       /* keep consistent thumb height */
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
       background: #f2f2f2;
       display: block;
     }
@@ -79,7 +97,7 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: cover;          /* keep image within boundaries */
+      object-fit: cover;
     }
 
     .metrics {
@@ -88,14 +106,8 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
       gap: 8px;
       margin: 8px 0 0 0;
     }
-    .metrics dt {
-      font-weight: 600;
-      color: #444;
-    }
-    .metrics dd {
-      margin: 0;
-      color: #222;
-    }
+    .metrics dt { font-weight: 600; color: #444; }
+    .metrics dd { margin: 0; color: #222; }
   `],
 })
 export class PetCardComponent {

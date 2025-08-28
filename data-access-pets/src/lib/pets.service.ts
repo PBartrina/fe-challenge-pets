@@ -37,4 +37,8 @@ export class PetsService {
 
     return this.http.get<Pet[]>(`${this.baseUrl}/pets`, { params });
   }
+
+  getPetById(id: number): Observable<Pet> {
+    return this.http.get<Pet>(`${this.baseUrl}/pets/${id}`);
+  }
 }
