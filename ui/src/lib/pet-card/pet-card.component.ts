@@ -37,10 +37,6 @@ const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,
         />
       </figure>
 
-      @if (pet().description) {
-        <p class="description">{{ pet().description }}</p>
-      }
-
       <dl class="metrics">
         <div>
           <dt>Weight</dt>
